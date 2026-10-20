@@ -2,13 +2,13 @@
 
 A lightweight screenshot tool for GNOME with built-in markup. Capture an area, mark it up, then copy or save.
 
-[![Download .deb](https://img.shields.io/badge/Download-.deb-e95420?style=for-the-badge&logo=ubuntu&logoColor=white)](https://github.com/mishajib/shotwrit/releases/download/v0.1.0/shotwrit_0.1.0_all.deb)
+[![Download .deb](https://img.shields.io/badge/Download-.deb-e95420?style=for-the-badge&logo=ubuntu&logoColor=white)](https://github.com/mishajib/shotwrit/releases/download/v0.1.1/shotwrit_0.1.1_all.deb)
 [![All releases](https://img.shields.io/github/v/release/mishajib/shotwrit?style=for-the-badge&label=Releases)](https://github.com/mishajib/shotwrit/releases)
 
 ![Shotwrit editing a screenshot with a box, arrow, text, highlight, pen and blur](docs/demo.png)
 
 ## Features
-- Full-screen dimmed selector: drag an area, press **Enter** to copy and save
+- **Ctrl+Alt+S** opens GNOME's own selector (area, screen or window), then the editor
 - Area, window and full-screen capture with an optional delay
 - Multiple monitors: asks which one to capture (skipped on a single monitor)
 - Pen, box, arrow, text, highlight and blur tools

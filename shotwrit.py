@@ -5,7 +5,7 @@ Copyright (C) 2026 mishajib
 SPDX-License-Identifier: GPL-3.0-or-later
 
 Usage: shotwrit.py [--quick] [--setup] [--uninstall-user] [image.png]
-(no image: capture via the portal; --quick opens full-screen: drag to select, Enter copies+saves)
+(no image: capture via the portal; --quick shows GNOME's screenshot selector, then opens the editor)
 """
 import datetime
 import math
@@ -197,9 +197,10 @@ def portal_screenshot(callback, interactive=False):
 
 
 class Editor(Gtk.ApplicationWindow):
-    def __init__(self, app, image_path, quick=False):
+    def __init__(self, app, image_path, quick=False, autoclose=False):
         super().__init__(application=app, title="Shotwrit")
         self.quick = quick
+        self.autoclose = quick or autoclose  # close after Copy/Save
         self.load_image(image_path)
         self.tool = "select"
         self.color = COLORS["Red"]
@@ -607,7 +608,7 @@ class Editor(Gtk.ApplicationWindow):
         self.set_title("Shotwrit - saved " + path)
         if toast:
             self.show_toast("Saved to Pictures/shotwrit")
-        if self.quick:
+        if self.autoclose:
             GLib.timeout_add(1200, lambda: self.close() or False)
 
 
@@ -622,19 +623,22 @@ class App(Gtk.Application):
             Editor(self, self.image, self.quick).present()
         else:
             self.hold()
-            portal_screenshot(self.on_shot)
+            portal_screenshot(self.on_shot, interactive=self.quick)
 
     def on_shot(self, path):
         if path is None:
             self.release()
             print("screenshot cancelled or denied", file=sys.stderr)
             return
-        choose_monitor(self, path, self.open_shot)
+        if self.quick:  # GNOME's own selector already cropped it
+            self.open_shot(path)
+        else:
+            choose_monitor(self, path, self.open_shot)
 
     def open_shot(self, path):
         self.release()
         if path:
-            Editor(self, path, self.quick).present()
+            Editor(self, path, self.quick and bool(self.image), autoclose=self.quick).present()
             discard(path)
 
 
