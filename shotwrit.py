@@ -4,14 +4,18 @@
 Copyright (C) 2026 mishajib
 SPDX-License-Identifier: GPL-3.0-or-later
 
-Usage: shotwrit.py [--quick] [--setup] [--uninstall-user] [image.png]
+Usage: shotwrit.py [--quick] [--setup] [--update] [--version] [--uninstall-user] [image.png]
 (no image: capture via the portal; --quick shows GNOME's screenshot selector, then opens the editor)
 """
 import datetime
+import json
 import math
 import os
 import shutil
+import subprocess
 import sys
+import tempfile
+import urllib.request
 
 import gi
 
@@ -24,6 +28,8 @@ COLORS = {"Red": (0.93, 0.15, 0.15), "Yellow": (1.0, 0.82, 0.0),
           "Green": (0.1, 0.7, 0.3), "Blue": (0.15, 0.4, 0.95), "Black": (0, 0, 0)}
 SAVE_DIR = os.path.expanduser("~/Pictures/shotwrit")
 APP_ID = "io.github.mishajib.Shotwrit"
+VERSION = "0.1.1"
+REPO = "mishajib/shotwrit"
 KEYS_SCHEMA = "org.gnome.settings-daemon.plugins.media-keys"
 KEY_PATH = "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/shotwrit/"
 SETUP_MARK = os.path.join(GLib.get_user_config_dir(), "shotwrit", "shortcut-set")
@@ -149,6 +155,46 @@ def choose_monitor(app, path, callback):
     win.add_controller(keys)
     win.set_child(box)
     win.present()
+
+
+def _fetch(url):
+    req = urllib.request.Request(url, headers={"User-Agent": "shotwrit/" + VERSION})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        return r.read()
+
+
+def update():
+    """Install the latest GitHub release over this one. Returns a process exit code."""
+    try:
+        rel = json.loads(_fetch("https://api.github.com/repos/%s/releases/latest" % REPO))
+    except Exception as e:  # network, rate limit, bad json
+        print("could not check for updates:", e, file=sys.stderr)
+        return 1
+    tag = rel["tag_name"]
+    ver = lambda v: tuple(int(x) for x in v.lstrip("v").split(".") if x.isdigit())
+    if ver(tag) <= ver(VERSION):
+        print("Shotwrit %s is already the latest version." % VERSION)
+        return 0
+    print("Updating Shotwrit %s -> %s" % (VERSION, tag.lstrip("v")))
+    me = os.path.abspath(__file__)
+    try:
+        if me.startswith("/usr/"):  # installed from the .deb
+            deb = next(a for a in rel["assets"] if a["name"].endswith(".deb"))
+            with tempfile.TemporaryDirectory() as d:
+                path = os.path.join(d, deb["name"])
+                with open(path, "wb") as f:
+                    f.write(_fetch(deb["browser_download_url"]))
+                return subprocess.call(["sudo", "apt", "install", "-y", path])
+        code = _fetch("https://raw.githubusercontent.com/%s/%s/shotwrit.py" % (REPO, tag))
+        compile(code, me, "exec")  # don't overwrite ourselves with something broken
+        with open(me + ".new", "wb") as f:
+            f.write(code)
+        os.replace(me + ".new", me)
+    except Exception as e:
+        print("update failed:", e, file=sys.stderr)
+        return 1
+    print("Updated to %s." % tag.lstrip("v"))
+    return 0
 
 
 def uninstall_user():
@@ -647,6 +693,11 @@ if __name__ == "__main__":
         uninstall_user()
         print("Shotwrit shortcut, permission and settings removed. Screenshots in %s were kept." % SAVE_DIR)
         sys.exit(0)
+    if "--version" in sys.argv:
+        print("Shotwrit " + VERSION)
+        sys.exit(0)
+    if "--update" in sys.argv:
+        sys.exit(update())
     if "--setup" in sys.argv:
         print("Shortcut set: Ctrl+Alt+S" if first_run_setup(force=True) else "Shortcut not set (GNOME only)")
         sys.exit(0)
