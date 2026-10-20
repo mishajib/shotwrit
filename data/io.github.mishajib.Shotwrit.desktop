@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Name=Shotwrit
+Comment=Screenshot tool with drawing, boxes, arrows, text and blur
+Exec=shotwrit
+Icon=applets-screenshooter
+Terminal=false
+Categories=Graphics;GTK;
+Keywords=screenshot;capture;annotate;markup;
+StartupWMClass=io.github.mishajib.Shotwrit
+Actions=Quick;
+
+[Desktop Action Quick]
+Name=Quick capture (full-screen select)
+Exec=shotwrit --quick
