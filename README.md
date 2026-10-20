@@ -55,6 +55,12 @@ Your screenshots in `~/Pictures/shotwrit` are always kept.
 
 You can also run `shotwrit [--quick] [image.png]` to open an existing image.
 
+## Update
+```sh
+shotwrit --update
+```
+Checks GitHub for a newer release and installs it (asks for your password on `.deb` installs). `shotwrit --version` shows what you have.
+
 ## Notes
 - Linux only for now. A Windows port would need a different capture and window layer; contributions welcome.
 - On Wayland the clipboard is lost when its owner exits, so Shotwrit stays hidden in the background after Copy until the clipboard changes.
